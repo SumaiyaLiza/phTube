@@ -33,10 +33,10 @@ const displayAll = (displayData) => {
 const fetchDataByCategory = async (id) => {
     const res = await fetch(`https://openapi.programming-hero.com/api/videos/category/${id}`);
     const data = await res.json();
-    const videos = data.data;
-    
+    let videos = data.data;
+
     if (sortByView) {
-        videos.sort((a, b) => {
+        videos = videos.sort((a, b) => {
             const firstSort = parseFloat(a.others?.views?.replace("K", "") || 0);
             const secondSort = parseFloat(b.others?.views?.replace("K", "") || 0);
             return secondSort - firstSort; // Sort in descending order
@@ -84,7 +84,7 @@ const fetchDataByCategory = async (id) => {
     });
 }
 
-fetchCategories(); // Fetch categories initially
+fetchCategories(selectedCategory); // Fetch categories initially
 
 sortBtn.addEventListener('click', () => {
     sortByView = !sortByView; // Toggle sorting state
