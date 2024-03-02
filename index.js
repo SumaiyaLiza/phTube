@@ -6,40 +6,55 @@ const fetchCategories = async () => {
 }
 
 const btnContainer = document.getElementById('btn-container');
-const ErrorElement = document.getElementById('error-element'); 
+const ErrorElement = document.getElementById('error-element');
+const cardContainer = document.getElementById('card-container');
+const sortBtn = document.getElementById('sort-btn');
+
+let selectedCategory = 1000;
+let sortByView = false; // Initial sorting state
 
 const displayAll = (displayData) => {
+    btnContainer.innerHTML = ''; // Clear existing buttons
     displayData.forEach(item => {
         const newBtn = document.createElement('button');
-        newBtn.className = "btn btn-ghost bg-slate-700 text-white text-lg";
+        newBtn.className = "category-btn btn btn-ghost bg-slate-700 text-white text-lg";
         newBtn.innerText = item.category;
         newBtn.addEventListener('click', () => {
-            cardContainer.innerHTML = ''; // Clear existing cards
-            fetchDataByCategory(item.category_id);
+            selectedCategory = item.category_id; // Update selected category
+            fetchDataByCategory(selectedCategory);
+            const allBtn = document.querySelectorAll('.category-btn');
+            allBtn.forEach(btn => btn.classList.remove('bg-red-600'));
+            newBtn.classList.add('bg-red-600');
         });
         btnContainer.appendChild(newBtn);
     });
 }
 
-const cardContainer = document.getElementById('card-container');
-
 const fetchDataByCategory = async (id) => {
     const res = await fetch(`https://openapi.programming-hero.com/api/videos/category/${id}`);
     const data = await res.json();
     const videos = data.data;
-    if(videos.length=== 0)
-        {
-            ErrorElement.classList.remove('hidden');
-        }
-        else{
+    
+    if (sortByView) {
+        videos.sort((a, b) => {
+            const firstSort = parseFloat(a.others?.views?.replace("K", "") || 0);
+            const secondSort = parseFloat(b.others?.views?.replace("K", "") || 0);
+            return secondSort - firstSort; // Sort in descending order
+        });
+    }
 
-            ErrorElement.classList.add('hidden'); 
-        }
+    cardContainer.innerHTML = ''; // Clear existing cards
+
+    if (videos.length === 0) {
+        ErrorElement.classList.remove('hidden');
+    } else {
+        ErrorElement.classList.add('hidden');
+    }
 
     videos.forEach(video => {
         let badge = '';
         if (video.authors[0].verified) {
-            badge ='<img class="w-6 h-6" src="verify.png"></img>';
+            badge = '<img class="w-6 h-6" src="verify.png"></img>';
         }
         const div = document.createElement('div');
         div.innerHTML = `
@@ -69,4 +84,9 @@ const fetchDataByCategory = async (id) => {
     });
 }
 
-fetchCategories(); 
+fetchCategories(); // Fetch categories initially
+
+sortBtn.addEventListener('click', () => {
+    sortByView = !sortByView; // Toggle sorting state
+    fetchDataByCategory(selectedCategory);
+});
